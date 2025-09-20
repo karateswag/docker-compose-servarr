@@ -108,23 +108,21 @@ services:
       - "traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN}`)"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
-  ombi:
-    container_name: ombi
-    image: lscr.io/linuxserver/ombi:${OMBI_VERSION}
+  jellyseerr:
+    container_name: jellyseerr
+    image: fallenbagel/jellyseerr:${JELLYSEERR_VERSION}
     restart: unless-stopped
     environment:
       TZ: ${TIMEZONE}
-      PUID: ${PUID}
-      PGID: ${PGID}
     networks:
       - traefik
     volumes:
-      - ombi:/config
+      - jellyseerr:/app/config
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
-      - "traefik.http.routers.ombi.rule=Host(`ombi.${DOMAIN}`)"
-      - "traefik.http.services.ombi.loadbalancer.server.port=3579"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${DOMAIN}`)"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
 
 networks:
   traefik:
@@ -136,7 +134,7 @@ volumes:
   deluge:
   bazarr:
   prowlarr:
-  ombi:
+  jellyseerr:
   servarr_backups:
     external: true
   media:
