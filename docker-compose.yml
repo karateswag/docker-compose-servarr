@@ -112,8 +112,6 @@ services:
     container_name: jellyseerr
     image: fallenbagel/jellyseerr:${JELLYSEERR_VERSION}
     restart: unless-stopped
-    depends_on:
-      - jellyseerr-postgres
     environment:
       TZ: ${TIMEZONE}
     networks:
