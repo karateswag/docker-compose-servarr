@@ -1,0 +1,176 @@
+services:
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:${SONARR_VERSION}
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      UMASK: ${UMASK}
+    networks:
+      - traefik
+    volumes:
+      - sonarr:/config
+      - servarr_backups:/config/Backups #if you want to save backups to specific volume
+      - media:/mnt/media
+      - downloads:/mnt/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN}`)"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+
+  radarr:
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:${RADARR_VERSION}
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      UMASK: ${UMASK}
+    networks:
+      - traefik
+    volumes:
+      - radarr:/config
+      - servarr_backups:/config/Backups #if you want to save backups to specific volume
+      - media:/mnt/media
+      - downloads:/mnt/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN}`)"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+
+  deluge:
+    container_name: deluge
+    image: lscr.io/linuxserver/deluge:${DELUGE_VERSION}
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      UMASK: ${UMASK}
+    networks:
+      - traefik
+    ports:
+      - 6881:6881 #inbound torrent traffic
+      - 6881:6881/udp #inbound torrent traffic
+      - 58846:58846 #thin client
+    volumes:
+      - deluge:/config
+      - downloads:/mnt/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.deluge.rule=Host(`deluge.${DOMAIN}`)"
+      - "traefik.http.services.deluge.loadbalancer.server.port=8112"
+
+  prowlarr:
+    container_name: prowlarr
+    image: lscr.io/linuxserver/prowlarr:${PROWLARR_VERSION}
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      UMASK: ${UMASK}
+    networks:
+      - traefik
+    volumes:
+      - prowlarr:/config
+      - servarr_backups:/config/Backups #if you want to save backups to specific volume
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN}`)"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+
+  bazarr:
+    container_name: bazarr
+    image: lscr.io/linuxserver/bazarr:${BAZARR_VERSION}
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      UMASK: ${UMASK}
+    networks:
+      - traefik
+    volumes:
+      - bazarr:/config
+      - servarr_backups:/config/Backups #if you want to save backups to specific volume
+      - media:/mnt/media
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN}`)"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+
+  jellyseerr:
+    container_name: jellyseerr
+    image: fallenbagel/jellyseerr:${JELLYSEERR_VERSION}
+    restart: unless-stopped
+    depends_on:
+      - jellyseerr-postgres
+    environment:
+      TZ: ${TIMEZONE}
+      DB_TYPE: postgres
+      DB_HOST: "jellyseerr-postgres" # The host (url) of the database
+      DB_PORT: "5432" # The port to connect to
+      DB_USER: "jellyseerr" # Username used to connect to the database
+      DB_PASS: ${DB_PASS} # Password of the user used to connect to the database
+      DB_NAME: "jellyseerr" # The name of the database to connect to
+      DB_LOG_QUERIES: "false" # Whether to log the DB queries for debugging
+      DB_USE_SSL: "false" # Whether to enable ssl for database connection
+    networks:
+      - traefik
+      - jellyseerr-backend
+    volumes:
+      - jellyseerr:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${DOMAIN}`)"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+
+  jellyseerr-postgres:
+    container_name: jellyseerr-postgres
+    image: postgres:17
+    restart: unless-stopped
+    networks:
+      - jellyseerr-backend
+    environment:
+      TZ: ${TIMEZONE}
+      POSTGRES_USER: jellyseerr
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: jellyseerr
+    volumes:
+      - jellyseerr-postgres:/var/lib/postgresql/data
+
+networks:
+  traefik:
+    external: true
+  jellyseerr-backend:
+
+volumes:
+  sonarr:
+  radarr:
+  deluge:
+  bazarr:
+  prowlarr:
+  jellyseerr:
+  jellyseerr-postgres:
+  servarr_backups:
+    external: true
+  media:
+    external: true
+  downloads:
+    external: true
