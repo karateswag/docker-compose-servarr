@@ -58,7 +58,7 @@ services:
       - 58846:58846 #thin client
     volumes:
       - deluge:/config
-      - media:/mnt/downloads
+      - media:/mnt/media
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
