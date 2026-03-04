@@ -14,7 +14,6 @@ services:
       - sonarr:/config
       - servarr_backups:/config/Backups #if you want to save backups to specific volume
       - media:/mnt/media
-      - downloads:/mnt/downloads
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
@@ -36,7 +35,6 @@ services:
       - radarr:/config
       - servarr_backups:/config/Backups #if you want to save backups to specific volume
       - media:/mnt/media
-      - downloads:/mnt/downloads
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
@@ -60,7 +58,7 @@ services:
       - 58846:58846 #thin client
     volumes:
       - deluge:/config
-      - downloads:/mnt/downloads
+      - media:/mnt/downloads
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
@@ -138,6 +136,4 @@ volumes:
   servarr_backups:
     external: true
   media:
-    external: true
-  downloads:
     external: true
