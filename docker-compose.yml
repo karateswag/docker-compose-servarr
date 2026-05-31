@@ -67,7 +67,7 @@ services:
 
   qbittorrent:
     container_name: qbittorrent
-    image: lscr.io/linuxserver/qbittorrent:${QBITTORENT_VERSION}
+    image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_VERSION}
     environment:
       TZ: ${TIMEZONE}
       PUID: ${PUID}
